@@ -1,1 +1,895 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>图办事项</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --primary: #4f8ef7;
+      --primary-light: #e8f0fe;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* —— Header —— */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+    .stats {
+      font-size: .78rem;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* —— Tabs —— */
+    .tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 4px;
+      font-size: .88rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+    }
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* —— Main content —— */
+    .page { display: none; padding: 16px 16px 0; }
+    .page.active { display: block; }
+
+    /* —— Add task form —— */
+    .add-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .input-row input {
+      flex: 1;
+      height: 44px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: .95rem;
+      color: var(--gray-900);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .input-row input:focus { border-color: var(--primary); background: #fff; }
+    .btn-add {
+      height: 44px;
+      width: 44px;
+      border-radius: 10px;
+      background: var(--primary);
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .btn-add:active { background: #3b78e7; }
+
+    .meta-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .meta-row select, .meta-row input[type="date"] {
+      width: 100%;
+      height: 38px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 0 8px;
+      font-size: .82rem;
+      color: var(--gray-700);
+      background: var(--gray-50);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .meta-row select:focus, .meta-row input[type="date"]:focus {
+      border-color: var(--primary);
+    }
+
+    /* —— Search bar —— */
+    .search-bar {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .search-bar input {
+      width: 100%;
+      height: 40px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 20px;
+      padding: 0 14px 0 38px;
+      font-size: .9rem;
+      color: var(--gray-900);
+      background: #fff;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search-bar input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+    }
+    .search-bar input::placeholder { color: var(--gray-400); }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      font-size: 1rem;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .search-clear {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: var(--gray-200);
+      color: var(--gray-500);
+      font-size: .75rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .search-clear.visible { display: flex; }
+
+    /* —— Filter bar —— */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 16px;
+      border: 1.5px solid var(--gray-200);
+      background: #fff;
+      font-size: .8rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .2s;
+    }
+    .chip.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* —— Task list —— */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .empty-hint {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--gray-400);
+      font-size: .9rem;
+    }
+    .empty-hint .icon { font-size: 3rem; margin-bottom: 10px; }
+
+    /* —— Task card —— */
+    .task-card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px 14px 12px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      border-left: 4px solid transparent;
+      transition: opacity .25s, transform .25s;
+    }
+    .task-card.done { opacity: .5; }
+    .task-card.priority-high { border-left-color: var(--danger); }
+    .task-card.priority-mid  { border-left-color: var(--warning); }
+    .task-card.priority-low  { border-left-color: var(--success); }
+
+    .check-wrap {
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+    .check-wrap input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .task-body { flex: 1; min-width: 0; }
+    .task-name {
+      font-size: .97rem;
+      font-weight: 500;
+      line-height: 1.4;
+      word-break: break-all;
+      color: var(--gray-900);
+    }
+    .task-card.done .task-name {
+      text-decoration: line-through;
+      color: var(--gray-400);
+    }
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 7px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 11px;
+      font-size: .72rem;
+      font-weight: 500;
+    }
+    .badge-priority-high { background: #fee2e2; color: #dc2626; }
+    .badge-priority-mid  { background: #fef3c7; color: #d97706; }
+    .badge-priority-low  { background: #dcfce7; color: #16a34a; }
+    .badge-tag  { background: var(--primary-light); color: var(--primary); }
+    .badge-date { background: var(--gray-100); color: var(--gray-500); }
+    .badge-overdue { background: #fee2e2; color: #dc2626; }
+
+    .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+      transition: background .15s, color .15s;
+    }
+    .btn-icon:active { background: var(--gray-100); }
+    .btn-del:active { color: var(--danger); }
+
+    /* —— Archive page —— */
+    .period-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .period-btn {
+      flex: 1;
+      height: 38px;
+      border-radius: 10px;
+      border: 1.5px solid var(--gray-200);
+      background: #fff;
+      font-size: .88rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .period-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1.5px solid var(--gray-200);
+      background: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--gray-700);
+    }
+    .nav-label {
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .archive-group { margin-bottom: 18px; }
+    .archive-group-title {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-left: 4px;
+    }
+
+    .archive-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow);
+      opacity: .7;
+    }
+    .archive-item .task-name {
+      font-size: .9rem;
+      text-decoration: line-through;
+      color: var(--gray-400);
+    }
+    .archive-item .task-meta { margin-top: 5px; }
+    .archive-done-time {
+      font-size: .72rem;
+      color: var(--gray-400);
+      margin-top: 4px;
+    }
+
+    /* —— Floating snackbar —— */
+    .snackbar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--gray-900);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: .88rem;
+      transition: transform .3s ease;
+      z-index: 999;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .snackbar.show { transform: translateX(-50%) translateY(0); }
+
+    /* —— Scrollbar —— */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>我的待办</h1>
+    <span class="stats" id="statsLabel">待办 0 项</span>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="todo">待办</button>
+    <button class="tab" data-tab="done">已完成</button>
+    <button class="tab" data-tab="archive">归档回顾</button>
+  </div>
+</div>
+
+<!-- ===== TODO PAGE ===== -->
+<div class="page active" id="page-todo">
+
+  <div class="add-card">
+    <div class="input-row">
+      <input type="text" id="taskInput" placeholder="新建任务…" maxlength="100" autocomplete="off">
+      <button class="btn-add" id="btnAdd" aria-label="添加">＋</button>
+    </div>
+    <div class="meta-row">
+      <select id="selPriority">
+        <option value="mid">🟡 中优先级</option>
+        <option value="high">🔴 高优先级</option>
+        <option value="low">🟢 低优先级</option>
+      </select>
+      <select id="selTag">
+        <option value="工作">💼 工作</option>
+        <option value="生活">🏠 生活</option>
+        <option value="学习">📚 学习</option>
+        <option value="其他">🔖 其他</option>
+      </select>
+      <input type="date" id="selDate">
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索任务…" autocomplete="off" maxlength="100">
+    <button class="search-clear" id="searchClear" aria-label="清除搜索">✕</button>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="chip active" data-filter="all">全部</button>
+    <button class="chip" data-filter="high">🔴 高</button>
+    <button class="chip" data-filter="mid">🟡 中</button>
+    <button class="chip" data-filter="low">🟢 低</button>
+    <button class="chip" data-filter="工作">💼 工作</button>
+    <button class="chip" data-filter="生活">🏠 生活</button>
+    <button class="chip" data-filter="学习">📚 学习</button>
+    <button class="chip" data-filter="其他">🔖 其他</button>
+    <button class="chip" data-filter="overdue">⏰ 已逾期</button>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+</div>
+
+<!-- ===== DONE PAGE ===== -->
+<div class="page" id="page-done">
+  <div class="task-list" id="doneList"></div>
+</div>
+
+<!-- ===== ARCHIVE PAGE ===== -->
+<div class="page" id="page-archive">
+  <div class="period-selector">
+    <button class="period-btn active" data-period="week">本周</button>
+    <button class="period-btn" data-period="month">本月</button>
+  </div>
+  <div class="nav-row">
+    <button class="nav-btn" id="archivePrev">‹</button>
+    <span class="nav-label" id="archiveLabel"></span>
+    <button class="nav-btn" id="archiveNext">›</button>
+  </div>
+  <div id="archiveContent"></div>
+</div>
+
+<div class="snackbar" id="snackbar"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* —— Storage helpers —— */
+  const KEY_TASKS = 'todo_tasks_v2';
+  const KEY_DONE  = 'todo_done_v2';
+
+  function load(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || []; }
+    catch { return []; }
+  }
+  function save(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  let tasks = load(KEY_TASKS); // active tasks
+  let done  = load(KEY_DONE);  // archived done tasks
+
+  /* —— Unique ID —— */
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  /* —— Snackbar —— */
+  let snackTimer;
+  function toast(msg) {
+    const el = document.getElementById('snackbar');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  /* —— Date helpers —— */
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function isOverdue(dateStr) {
+    return dateStr && dateStr < today();
+  }
+  function fmtDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${m}/${d}`;
+  }
+  function fmtDateTime(ts) {
+    const d = new Date(ts);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 完成`;
+  }
+
+  const PRIORITY_LABEL = { high: '高', mid: '中', low: '低' };
+  const PRIORITY_ORDER = { high: 0, mid: 1, low: 2 };
+
+  /* —— Search —— */
+  let searchQuery = '';
+
+  const searchInput = document.getElementById('searchInput');
+  const searchClear = document.getElementById('searchClear');
+
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value.trim();
+    searchClear.classList.toggle('visible', searchQuery.length > 0);
+    renderTasks();
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchQuery = '';
+    searchClear.classList.remove('visible');
+    searchInput.focus();
+    renderTasks();
+  });
+
+  /* —— Render active tasks —— */
+  let currentFilter = 'all';
+
+  function matchFilter(task) {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'overdue') return isOverdue(task.date);
+    if (['high','mid','low'].includes(currentFilter)) return task.priority === currentFilter;
+    return task.tag === currentFilter;
+  }
+
+  function matchSearch(task) {
+    if (!searchQuery) return true;
+    return task.name.toLowerCase().includes(searchQuery.toLowerCase());
+  }
+
+  function renderTasks() {
+    const list = document.getElementById('taskList');
+    const filtered = tasks
+      .filter(t => matchFilter(t) && matchSearch(t))
+      .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+
+    list.innerHTML = '';
+    if (!filtered.length) {
+      const msg = searchQuery
+        ? `<div class="empty-hint"><div class="icon">🔍</div>没有找到"${escHtml(searchQuery)}"相关任务</div>`
+        : `<div class="empty-hint"><div class="icon">✓</div>暂无待办任务</div>`;
+      list.innerHTML = msg;
+      return;
+    }
+    filtered.forEach(task => list.appendChild(buildTaskCard(task, false)));
+  }
+
+  function renderDone() {
+    const list = document.getElementById('doneList');
+    const recent = [...done].reverse().slice(0, 60);
+    list.innerHTML = '';
+    if (!recent.length) {
+      list.innerHTML = `<div class="empty-hint"><div class="icon">🎉</div>还没有完成的任务</div>`;
+      return;
+    }
+    recent.forEach(task => list.appendChild(buildTaskCard(task, true)));
+  }
+
+  function buildTaskCard(task, isDone) {
+    const card = document.createElement('div');
+    card.className = `task-card priority-${task.priority}${isDone ? ' done' : ''}`;
+    card.dataset.id = task.id;
+
+    const overdue = !isDone && isOverdue(task.date);
+
+    let metaHtml = `<span class="badge badge-priority-${task.priority}">${PRIORITY_LABEL[task.priority]}优先</span>`;
+    if (task.tag) metaHtml += `<span class="badge badge-tag">${task.tag}</span>`;
+    if (task.date) {
+      metaHtml += overdue
+        ? `<span class="badge badge-overdue">⏰ ${fmtDate(task.date)} 逾期</span>`
+        : `<span class="badge badge-date">📅 ${fmtDate(task.date)}</span>`;
+    }
+    if (isDone && task.doneAt) {
+      metaHtml += `<span class="badge badge-date">✓ ${fmtDateTime(task.doneAt)}</span>`;
+    }
+
+    card.innerHTML = `
+      <div class="check-wrap">
+        <input type="checkbox" ${isDone ? 'checked' : ''} aria-label="${isDone ? '取消完成' : '完成'}">
+      </div>
+      <div class="task-body">
+        <div class="task-name">${escHtml(task.name)}</div>
+        <div class="task-meta">${metaHtml}</div>
+      </div>
+      ${!isDone ? `
+      <div class="task-actions">
+        <button class="btn-icon btn-del" data-id="${task.id}" aria-label="删除">🗑</button>
+      </div>` : ''}
+    `;
+
+    const checkbox = card.querySelector('input[type="checkbox"]');
+    if (!isDone) {
+      checkbox.addEventListener('change', () => completeTask(task.id));
+      card.querySelector('.btn-del').addEventListener('click', () => deleteTask(task.id));
+    } else {
+      checkbox.addEventListener('change', () => {
+        // restore unchecked state visually before the DOM is replaced
+        checkbox.checked = true;
+        uncompleteTask(task.id);
+      });
+    }
+    return card;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* —— Task operations —— */
+  function addTask() {
+    const input = document.getElementById('taskInput');
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+
+    const task = {
+      id: uid(),
+      name,
+      priority: document.getElementById('selPriority').value,
+      tag: document.getElementById('selTag').value,
+      date: document.getElementById('selDate').value,
+      createdAt: Date.now()
+    };
+    tasks.unshift(task);
+    save(KEY_TASKS, tasks);
+    input.value = '';
+    renderTasks();
+    updateStats();
+    toast('任务已添加 ✓');
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    save(KEY_TASKS, tasks);
+    renderTasks();
+    updateStats();
+    toast('已删除');
+  }
+
+  function completeTask(id) {
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const task = { ...tasks[idx], doneAt: Date.now() };
+    tasks.splice(idx, 1);
+    done.push(task);
+    save(KEY_TASKS, tasks);
+    save(KEY_DONE, done);
+
+    // animate out
+    const card = document.querySelector(`.task-card[data-id="${id}"]`);
+    if (card) {
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(30px)';
+      setTimeout(() => { renderTasks(); updateStats(); }, 260);
+    } else {
+      renderTasks();
+      updateStats();
+    }
+    toast('已完成，移入归档 🎉');
+  }
+
+  function uncompleteTask(id) {
+    const idx = done.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const task = { ...done[idx] };
+    delete task.doneAt;
+    done.splice(idx, 1);
+    tasks.unshift(task);
+    save(KEY_TASKS, tasks);
+    save(KEY_DONE, done);
+
+    // animate out the card in done list
+    const card = document.querySelector(`#doneList .task-card[data-id="${id}"]`);
+    if (card) {
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(-30px)';
+      setTimeout(() => { renderDone(); updateStats(); }, 260);
+    } else {
+      renderDone();
+      updateStats();
+    }
+    toast('已取消完成，移回待办 ↩');
+  }
+
+  /* —— Stats —— */
+  function updateStats() {
+    document.getElementById('statsLabel').textContent = `待办 ${tasks.length} 项`;
+  }
+
+  /* —— Filter chips —— */
+  document.getElementById('filterBar').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    renderTasks();
+  });
+
+  /* —— Add button & Enter key —— */
+  document.getElementById('btnAdd').addEventListener('click', addTask);
+  document.getElementById('taskInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTask();
+  });
+
+  /* —— Tabs —— */
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+      if (tab.dataset.tab === 'done') renderDone();
+      if (tab.dataset.tab === 'archive') renderArchive();
+    });
+  });
+
+  /* —— Archive —— */
+  let archivePeriod = 'week';
+  let archiveOffset = 0; // 0 = current week/month, -1 = previous, etc.
+
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      archivePeriod = btn.dataset.period;
+      archiveOffset = 0;
+      renderArchive();
+    });
+  });
+
+  document.getElementById('archivePrev').addEventListener('click', () => { archiveOffset--; renderArchive(); });
+  document.getElementById('archiveNext').addEventListener('click', () => { archiveOffset++; renderArchive(); });
+
+  function getWeekRange(offset) {
+    const now = new Date();
+    const day = now.getDay() || 7; // Mon=1 … Sun=7
+    const monday = new Date(now);
+    monday.setHours(0,0,0,0);
+    monday.setDate(now.getDate() - day + 1 + offset * 7);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return { start: monday, end: sunday };
+  }
+
+  function getMonthRange(offset) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + offset;
+    const start = new Date(y, m, 1);
+    const end = new Date(y, m + 1, 0);
+    return { start, end };
+  }
+
+  function renderArchive() {
+    const label = document.getElementById('archiveLabel');
+    const content = document.getElementById('archiveContent');
+
+    let start, end;
+    if (archivePeriod === 'week') {
+      ({ start, end } = getWeekRange(archiveOffset));
+      const s = `${start.getMonth()+1}/${start.getDate()}`;
+      const e = `${end.getMonth()+1}/${end.getDate()}`;
+      label.textContent = `${start.getFullYear()} 第${getWeekNumber(start)}周（${s}–${e}）`;
+    } else {
+      ({ start, end } = getMonthRange(archiveOffset));
+      label.textContent = `${start.getFullYear()} 年 ${start.getMonth()+1} 月`;
+    }
+
+    const startTs = start.getTime();
+    const endTs   = end.getTime() + 86400000 - 1;
+
+    const filtered = done.filter(t => t.doneAt >= startTs && t.doneAt <= endTs);
+
+    // Disable next button if at current period
+    document.getElementById('archiveNext').disabled = archiveOffset >= 0;
+    document.getElementById('archiveNext').style.opacity = archiveOffset >= 0 ? '.3' : '1';
+
+    content.innerHTML = '';
+    if (!filtered.length) {
+      content.innerHTML = `<div class="empty-hint"><div class="icon">🗭</div>该时间段没有已完成的任务</div>`;
+      return;
+    }
+
+    // Group by day
+    const groups = {};
+    filtered.forEach(t => {
+      const day = new Date(t.doneAt).toISOString().slice(0, 10);
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(t);
+    });
+
+    const sortedDays = Object.keys(groups).sort().reverse();
+    sortedDays.forEach(day => {
+      const grp = document.createElement('div');
+      grp.className = 'archive-group';
+      const [y, m, d] = day.split('-');
+      grp.innerHTML = `<div class="archive-group-title">${m}月${d}日 · ${groups[day].length} 项</div>`;
+      groups[day].forEach(task => {
+        const item = document.createElement('div');
+        item.className = 'archive-item';
+        let meta = `<span class="badge badge-priority-${task.priority}">${PRIORITY_LABEL[task.priority]}优先</span>`;
+        if (task.tag) meta += `<span class="badge badge-tag">${task.tag}</span>`;
+        item.innerHTML = `
+          <div class="task-name">${escHtml(task.name)}</div>
+          <div class="task-meta">${meta}</div>
+          <div class="archive-done-time">${fmtDateTime(task.doneAt)}</div>
+        `;
+        grp.appendChild(item);
+      });
+      content.appendChild(grp);
+    });
+  }
+
+  function getWeekNumber(d) {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+  }
+
+  /* —— Init —— */
+  document.getElementById('selDate').value = today();
+
+  renderTasks();
+  updateStats();
+})();
+</script>
+</body>
+</html>
